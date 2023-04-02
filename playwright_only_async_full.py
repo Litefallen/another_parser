@@ -44,8 +44,8 @@ async def main():
         browser = await async_pl.firefox.launch(headless=True)
         context = await browser.new_context()
         new_page = await browser.new_page()
-        # if NoneType AttributeError is raised - increase timeout value(+300-500 miliseconds incrementally)
-        time_for_js = 6000
+        # if NoneType AttributeError is raised - increase timeout value(+500 miliseconds incrementally)
+        time_for_js = 7000
         print('going to the site..')
         await new_page.goto(
             'https://www.dns-shop.ru/catalog/17a89aab16404e77/videokarty/')
@@ -53,8 +53,12 @@ async def main():
         last_page = await new_page.query_selector('.pagination-widget__page-link_last')
         last_page = await last_page.get_attribute('href')
         last_page = int(last_page.split('=')[1])
-        await new_page.close()
+        await browser.close()
         print('getting objects from pages...')
+        # chromium loads pages much faster(30-40% gains), but doesnt render JS in headless idk
+        browser = await async_pl.chromium.launch(headless=False)
+        # chromium could create multiple table in one window, but firefox couldnt.
+        context = await browser.new_context()
         await asyncio.gather(*[getting_objects(context, page_num, time_for_js) for page_num in range(1, last_page+1)])
         print('parsing data..')
         await asyncio.gather(*[async_parse(i, 'a>span', 'div.product-buy__price') for i in product_list])
