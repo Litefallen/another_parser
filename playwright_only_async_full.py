@@ -1,6 +1,4 @@
-
 from playwright.async_api import async_playwright
-
 import csv
 import datetime
 import asyncio
@@ -20,7 +18,8 @@ async def getting_objects(context, page_num, timeout):
     await page.wait_for_timeout(timeout)  # required for JS content to load
     prod_objects = await page.query_selector_all('div[data-id="product"]')
     product_list.extend(prod_objects)
-    
+
+
 # Asynchronous function to parse data from a product object
 async def async_parse(object, *selectors):
     obj_list = []
@@ -30,6 +29,7 @@ async def async_parse(object, *selectors):
         obj_list.append(obj)
     parsed_data.append(obj_list)
 
+
 # Function to write parsed data to a CSV file
 def csv_wrtr(*fieldnames):
     print('Writing data to a csv file..')
@@ -37,6 +37,7 @@ def csv_wrtr(*fieldnames):
         writer = csv.writer(file)
         writer.writerow(fieldnames)
         writer.writerows(parsed_data)
+
 
 # Main asynchronous function
 async def main():
@@ -61,10 +62,12 @@ async def main():
         browser = await async_pl.chromium.launch(headless=False)
         # chromium could create multiple table in one window, but firefox couldnt.
         context = await browser.new_context()
-        await asyncio.gather(*[getting_objects(context, page_num, time_for_js) for page_num in range(1, last_page+1)])
+        await asyncio.gather(*[getting_objects(context, page_num, time_for_js) for page_num in range(1, last_page + 1)])
         print('parsing data..')
         await asyncio.gather(*[async_parse(i, 'a>span', 'div.product-buy__price') for i in product_list])
+
+
 asyncio.run(main())
 print('parsing finished')
 csv_wrtr('Name', 'Price')
-print(datetime.datetime.now()-start)
+print(datetime.datetime.now() - start)
