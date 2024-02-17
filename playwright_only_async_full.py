@@ -4,11 +4,14 @@ from playwright.async_api import async_playwright
 import csv
 import datetime
 import asyncio
+
+# Lists to store product objects and parsed data
 product_list = []
 parsed_data = []
 start = datetime.datetime.now()
 
 
+# Asynchronous function to get product objects from a specific page
 async def getting_objects(context, page_num, timeout):
     page = await context.new_page()
     await page.goto(
@@ -17,11 +20,8 @@ async def getting_objects(context, page_num, timeout):
     await page.wait_for_timeout(timeout)  # required for JS content to load
     prod_objects = await page.query_selector_all('div[data-id="product"]')
     product_list.extend(prod_objects)
-
-
-# rendering required source
-
-
+    
+# Asynchronous function to parse data from a product object
 async def async_parse(object, *selectors):
     obj_list = []
     for selector in selectors:
@@ -30,7 +30,7 @@ async def async_parse(object, *selectors):
         obj_list.append(obj)
     parsed_data.append(obj_list)
 
-
+# Function to write parsed data to a CSV file
 def csv_wrtr(*fieldnames):
     print('Writing data to a csv file..')
     with open('prod_list_async_full.csv', 'w') as file:
@@ -38,15 +38,17 @@ def csv_wrtr(*fieldnames):
         writer.writerow(fieldnames)
         writer.writerows(parsed_data)
 
-
+# Main asynchronous function
 async def main():
     async with async_playwright() as async_pl:
+        # Launch a headless Firefox browser
         browser = await async_pl.firefox.launch(headless=True)
         context = await browser.new_context()
         new_page = await browser.new_page()
         # if NoneType AttributeError is raised - increase timeout value(+500 miliseconds incrementally)
         time_for_js = 7000
         print('going to the site..')
+        # Navigate to the main page to extract the last page number
         await new_page.goto(
             'https://www.dns-shop.ru/catalog/17a89aab16404e77/videokarty/')
 
